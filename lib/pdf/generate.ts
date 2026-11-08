@@ -408,8 +408,9 @@ export async function generateInvoicePdf(data: InvoiceData, assets: PdfAssets): 
     fonts = {
       serif: await doc.embedFont(assets.fonts.serif, { subset: true }),
       serifBold: await doc.embedFont(assets.fonts.serifBold, { subset: true }),
-      sans: await doc.embedFont(assets.fonts.sans, { subset: true }),
-      sansBold: await doc.embedFont(assets.fonts.sansBold, { subset: true }),
+      // Not subsetted: fontkit's subsetter dropped glyphs from Carlito (letters missing in the table).
+      sans: await doc.embedFont(assets.fonts.sans, { subset: false }),
+      sansBold: await doc.embedFont(assets.fonts.sansBold, { subset: false }),
       sansScale: 1,
     };
   } catch {
