@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-slate-50 text-slate-900 antialiased; overflow-x: hidden; }
+
+/* 16px inputs stop iOS Safari from zooming the page on focus */
+input, textarea, select { font-size: 16px; }
+
+@layer components {
+  .field-label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .field-input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm
+      placeholder:text-slate-400 focus:border-navy-600 focus:outline-none focus:ring-2 focus:ring-navy-600/25;
+    min-height: 44px;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field-input[aria-invalid="true"] { @apply border-red-500 focus:border-red-500 focus:ring-red-500/25; }
+  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-600/40 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-navy-800 text-white hover:bg-navy-900 active:bg-navy-950; }
+  .btn-secondary { @apply btn border border-slate-300 bg-white text-navy-800 hover:bg-slate-50 active:bg-slate-100; }
+  .btn-ghost { @apply btn text-slate-600 hover:bg-slate-100; }
+  .btn-danger { @apply btn text-red-600 hover:bg-red-50; }
+  .card { @apply rounded-xl border border-slate-200 bg-white shadow-sm; }
+}
