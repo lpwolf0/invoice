@@ -20,6 +20,8 @@ export interface InvoiceData {
   locations: string;
   /** Organization named in the payment-request letter body. */
   clientOrganization?: string;
+  /** Editable location/organization shown beneath the client signature line. */
+  clientSignatureLocation?: string;
   entries: InvoiceEntry[];
 }
 
