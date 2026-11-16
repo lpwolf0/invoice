@@ -16,7 +16,7 @@ import PdfPreview from "./PdfPreview";
 type Tab = "edit" | "preview";
 type Notice = { kind: "error" | "success"; text: string } | null;
 
-const EMPTY: InvoiceData = { invoiceNumber: "", invoiceDate: "", recipient: "", locations: "", entries: [] };
+const EMPTY: InvoiceData = { invoiceNumber: "", invoiceDate: "", recipient: "", locations: "", clientOrganization: "FHI 360 Nigeria", entries: [] };
 const NO_SUGGESTIONS = { staffName: [], destination: [], driverName: [], duration: [] };
 
 export default function InvoiceEditor({ id }: { id: string }) {
@@ -49,7 +49,7 @@ export default function InvoiceEditor({ id }: { id: string }) {
     const rec = getInvoice(id);
     if (rec) {
       meta.current = { createdAt: rec.createdAt, status: rec.status };
-      setData(rec.data);
+      setData({ ...rec.data, clientOrganization: rec.data.clientOrganization ?? "FHI 360 Nigeria" });
     } else {
       setData(newInvoiceData());
     }
@@ -91,6 +91,15 @@ export default function InvoiceEditor({ id }: { id: string }) {
     update((x) => ({ ...x, entries: x.entries.map((e) => (e.id === eid ? { ...e, ...patch } : e)) }));
   const addEntry = () =>
     update((x) => (x.entries.length >= MAX_ENTRIES ? x : { ...x, entries: [...x.entries, newEntry()] }));
+  const moveEntry = (eid: string, direction: -1 | 1) =>
+    update((x) => {
+      const from = x.entries.findIndex((entry) => entry.id === eid);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= x.entries.length) return x;
+      const entries = [...x.entries];
+      [entries[from], entries[to]] = [entries[to], entries[from]];
+      return { ...x, entries };
+    });
   const removeEntry = (eid: string) =>
     update((x) => ({ ...x, entries: x.entries.length <= 1 ? [newEntry()] : x.entries.filter((e) => e.id !== eid) }));
   const resetForm = () => {
@@ -228,6 +237,11 @@ export default function InvoiceEditor({ id }: { id: string }) {
                   <span className="mt-1 block text-xs text-slate-500">One line per line of the address, up to 3 lines.</span>
                 </label>
                 <label className="block">
+                  <span className="field-label">Organization in letter body</span>
+                  <input className="field-input" value={d.clientOrganization ?? "FHI 360 Nigeria"} autoComplete="off"
+                    onChange={(e) => setField("clientOrganization", e.target.value)} placeholder="FHI 360 Nigeria" />
+                </label>
+                <label className="block">
                   <span className="field-label">Locations</span>
                   <input className="field-input" value={d.locations} autoComplete="off"
                     onChange={(e) => setField("locations", e.target.value)} placeholder="Rivers State and Imo State" />
@@ -246,6 +260,7 @@ export default function InvoiceEditor({ id }: { id: string }) {
                 onChange={changeEntry}
                 onAdd={addEntry}
                 onRemove={removeEntry}
+                onMove={moveEntry}
                 suggestions={suggestions}
               />
             </section>
