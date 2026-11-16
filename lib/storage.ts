@@ -77,6 +77,7 @@ export function newInvoiceData(): InvoiceData {
     invoiceDate: todayIso(),
     recipient: DEFAULT_RECIPIENT,
     locations: DEFAULT_LOCATIONS,
+    clientOrganization: "FHI 360 Nigeria",
     entries: [newEntry()],
   };
 }
