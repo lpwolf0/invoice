@@ -394,7 +394,7 @@ function drawTablePage(
     page.drawLine({ start: { x: 71.3, y: ul }, end: { x: 165.9, y: ul }, thickness: 0.6, color: BLACK });
     page.drawLine({ start: { x: 396.0, y: ul }, end: { x: 490.6, y: ul }, thickness: 0.6, color: BLACK });
     draw(page, COMPANY.clientSignatureLabel, 72.0, ty(y0 + 74.4), CB, 9.48 * k);
-    draw(page, COMPANY.clientSignatureLocation, 71.3, ty(y0 + 88.1), C, 9.48 * k);
+    draw(page, d.clientSignatureLocation?.trim() || COMPANY.clientSignatureLocation, 71.3, ty(y0 + 88.1), C, 9.48 * k);
     draw(page, COMPANY.companySignatureLabel, 396.0, ty(y0 + 74.4), CB, 9.48 * k);
     draw(page, COMPANY.companySignatureSub, 396.0, ty(y0 + 88.1), C, 9.48 * k);
   }
