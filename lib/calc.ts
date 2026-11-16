@@ -1,7 +1,7 @@
 import type { InvoiceEntry } from "./types";
 
 export const VAT_RATE = 0.075;
-export const MAX_ENTRIES = 10;
+export const MAX_ENTRIES = 20;
 
 export const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
