@@ -166,7 +166,7 @@ function drawPage1(page: PDFPage, ctx: Ctx, d: InvoiceData, totals: ReturnType<t
   const loc = d.locations.replace(/\s+/g, " ").trim().replace(/\.+$/, "");
   const para =
     "The above-named company wishes to request for payment for the car hired to you, " +
-    "for the conveyance of Staff of FHI 360 Nigeria to various destination in " +
+    `for the conveyance of Staff of ${d.clientOrganization?.trim() || "FHI 360 Nigeria"} to various destination in ` +
     `${loc}.`;
   const lines = wrap(S, para, z, P1.right - P1.left);
   if (lines.length > 5)
