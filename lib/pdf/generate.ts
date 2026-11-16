@@ -414,10 +414,13 @@ function drawPage2(doc: PDFDocument, ctx: Ctx, d: InvoiceData, totals: ReturnTyp
   while (rowHeight(remaining) > finalRowsCapacity) {
     // Use as much of this page as possible, but leave a final-page-sized
     // remainder for the totals and signature block.
-    const target = Math.min(continuationRowsCapacity, rowHeight(remaining) - finalRowsCapacity);
+    const lastFitsFinal = remaining[remaining.length - 1].height <= finalRowsCapacity;
+    const reserveHeight = lastFitsFinal ? remaining[remaining.length - 1].height : 0;
+    const target = Math.min(continuationRowsCapacity, rowHeight(remaining) - reserveHeight);
     const chunk: RowLayout[] = [];
     let used = 0;
-    while (remaining.length > 1 && used + remaining[0].height <= target) {
+    while (remaining.length > (lastFitsFinal ? 1 : 0) &&
+      used + remaining[0].height <= target) {
       const next = remaining.shift()!;
       chunk.push(next);
       used += next.height;
