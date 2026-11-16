@@ -78,6 +78,7 @@ export function newInvoiceData(): InvoiceData {
     recipient: DEFAULT_RECIPIENT,
     locations: DEFAULT_LOCATIONS,
     clientOrganization: "FHI 360 Nigeria",
+    clientSignatureLocation: "PALLADIUM ABUJA.",
     entries: [newEntry()],
   };
 }
