@@ -9,6 +9,7 @@ interface Props {
   onChange: (id: string, patch: Partial<InvoiceEntry>) => void;
   onAdd: () => void;
   onRemove: (id: string) => void;
+  onMove: (id: string, direction: -1 | 1) => void;
   suggestions: Record<"staffName" | "destination" | "driverName" | "duration", string[]>;
 }
 
@@ -24,7 +25,7 @@ function Field({ label, children, error }: { label: string; children: React.Reac
   );
 }
 
-export default function EntriesEditor({ entries, onChange, onAdd, onRemove, suggestions }: Props) {
+export default function EntriesEditor({ entries, onChange, onAdd, onRemove, onMove, suggestions }: Props) {
   const atMax = entries.length >= MAX_ENTRIES;
   const only = entries.length === 1;
 
@@ -59,10 +60,16 @@ export default function EntriesEditor({ entries, onChange, onAdd, onRemove, sugg
           <div key={e.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold text-navy-900">Entry {i + 1}</h3>
-              <button type="button" className="btn-danger !min-h-[40px] px-3" onClick={() => onRemove(e.id)}
+              <div className="flex items-center gap-2">
+                <button type="button" className="btn-secondary !min-h-[40px] px-3" onClick={() => onMove(e.id, -1)}
+                  disabled={i === 0} aria-label={`Move entry ${i + 1} up`} title="Move up">↑</button>
+                <button type="button" className="btn-secondary !min-h-[40px] px-3" onClick={() => onMove(e.id, 1)}
+                  disabled={i === entries.length - 1} aria-label={`Move entry ${i + 1} down`} title="Move down">↓</button>
+                <button type="button" className="btn-danger !min-h-[40px] px-3" onClick={() => onRemove(e.id)}
                 aria-label={only ? "Clear entry" : `Remove entry ${i + 1}`}>
                 {only ? "Clear" : "Remove"}
-              </button>
+                </button>
+              </div>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -105,7 +112,15 @@ export default function EntriesEditor({ entries, onChange, onAdd, onRemove, sugg
           <tbody>
             {entries.map((e, i) => (
               <tr key={e.id} className="align-top">
-                <td className="px-1 pt-3 text-sm font-medium text-slate-500">{i + 1}.</td>
+                <td className="px-1 pt-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-sm font-medium text-slate-500">{i + 1}.</span>
+                    <button type="button" className="btn-secondary !min-h-[28px] !px-2" onClick={() => onMove(e.id, -1)}
+                      disabled={i === 0} aria-label={`Move entry ${i + 1} up`} title="Move up">↑</button>
+                    <button type="button" className="btn-secondary !min-h-[28px] !px-2" onClick={() => onMove(e.id, 1)}
+                      disabled={i === entries.length - 1} aria-label={`Move entry ${i + 1} down`} title="Move down">↓</button>
+                  </div>
+                </td>
                 <td className="px-1"><input type="date" aria-label={`Entry ${i + 1} date`} value={e.date} onChange={(ev) => onChange(e.id, { date: ev.target.value })} className="field-input" /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} quantity`} {...num(e, "qty")} /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} staff name`} {...text(e, "staffName", caps)} /></td>
