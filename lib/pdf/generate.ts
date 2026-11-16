@@ -287,32 +287,30 @@ function fitNumber(f: PDFFont, s: string, size: number, maxW: number): number {
   return z;
 }
 
-function drawPage2(page: PDFPage, ctx: Ctx, d: InvoiceData, totals: ReturnType<typeof computeTotals>) {
+function drawTablePage(
+  page: PDFPage,
+  ctx: Ctx,
+  d: InvoiceData,
+  totals: ReturnType<typeof computeTotals>,
+  rows: RowLayout[],
+  isFinal: boolean,
+  isContinuation: boolean,
+) {
   const { sans: C, sansBold: CB, serif: S } = ctx.fonts;
   drawLetterhead(page, ctx, d.invoiceNumber);
-  drawCentered(page, "INVOICE", 297.66, ty(177.2), CB, 11.04 * ctx.fonts.sansScale);
+  drawCentered(page, isContinuation ? "INVOICE (CONTINUED)" : "INVOICE",
+    297.66, ty(177.2), CB, 11.04 * ctx.fonts.sansScale);
 
-  // Shrink text a little if many long rows would not fit on the page.
-  let scale = 1;
-  let rows = layoutRows(ctx, d, scale);
-  for (const s of [1, 0.94, 0.88, 0.82, 0.76]) {
-    scale = s;
-    rows = layoutRows(ctx, d, scale);
-    if (tableBottom(rows) + 22 + T.sigHeight <= PAGE_H - 24) break;
-  }
-  const bottom = tableBottom(rows);
-  if (bottom + 22 + T.sigHeight > PAGE_H - 24)
-    throw new PdfLayoutError("The entries contain too much text to fit on one page. Shorten the destinations.");
-
+  const scale = 1;
   const k = ctx.fonts.sansScale;
-  const size = T.font * scale * k; // sans body text
-  const numSize = T.font * scale; // numbers are serif (as in the original)
-  const pitch = T.pitch * scale;
-  const baseOff = T.base - (T.pitch - pitch); // keeps the bottom padding constant when text shrinks
-  const hs = T.font * k; // header text never shrinks with the rows
+  const size = T.font * k;
+  const numSize = T.font;
+  const pitch = T.pitch;
+  const baseOff = T.base;
+  const hs = T.font * k;
 
-  /* header */
-  const hb = ty(T.top + T.base - 0.0);
+  /* table header */
+  const hb = ty(T.top + T.base);
   drawCentered(page, "S/N", colMid(C_SN), hb, CB, hs);
   drawCentered(page, "DATE", colMid(C_DATE), hb, CB, hs);
   drawCentered(page, "QTY", colMid(C_QTY), hb, CB, hs);
@@ -354,46 +352,93 @@ function drawPage2(page: PDFPage, ctx: Ctx, d: InvoiceData, totals: ReturnType<t
     hLines.push(top);
   }
 
-  /* summary rows */
-  const labelRight = 520.3;
-  const sumFont = T.font * k;
-  const numFont = T.font;
-  const money = (n: number) => groupedCompact(n);
-  // Total
-  drawRight(page, "Total", labelRight, ty(top + 11.85), CB, sumFont);
-  drawCentered(page, money(totals.total), 556.1, ty(top + 11.55), S, numFont);
-  top += T.totalH;
-  hLines.push(top);
-  // VAT
-  drawRight(page, "VAT", labelRight, ty(top + T.base), CB, sumFont);
-  drawRight(page, "7.5%", labelRight, ty(top + T.base + T.sumPitch), CB, sumFont);
-  drawCentered(page, money(totals.vat), 556.1, ty(top + T.base - 0.1), S, numFont);
-  top += T.vatH;
-  hLines.push(top);
-  // Grand total
-  drawRight(page, "GRAND", labelRight, ty(top + T.base), CB, sumFont);
-  drawRight(page, "TOTAL", labelRight, ty(top + T.base + T.sumPitch), CB, sumFont);
-  drawCentered(page, money(totals.payable), 556.1, ty(top + T.base - 0.1), S, numFont);
-  top += T.grandH;
-  hLines.push(top);
+  /* totals appear only after the final entry, on the final table page */
+  if (isFinal) {
+    const labelRight = 520.3;
+    const sumFont = T.font * k;
+    const numFont = T.font;
+    const money = (n: number) => groupedCompact(n);
+    drawRight(page, "Total", labelRight, ty(top + 11.85), CB, sumFont);
+    drawCentered(page, money(totals.total), 556.1, ty(top + 11.55), S, numFont);
+    top += T.totalH;
+    hLines.push(top);
 
-  /* grid */
+    drawRight(page, "VAT", labelRight, ty(top + T.base), CB, sumFont);
+    drawRight(page, "7.5%", labelRight, ty(top + T.base + T.sumPitch), CB, sumFont);
+    drawCentered(page, money(totals.vat), 556.1, ty(top + T.base - 0.1), S, numFont);
+    top += T.vatH;
+    hLines.push(top);
+
+    drawRight(page, "GRAND", labelRight, ty(top + T.base), CB, sumFont);
+    drawRight(page, "TOTAL", labelRight, ty(top + T.base + T.sumPitch), CB, sumFont);
+    drawCentered(page, money(totals.payable), 556.1, ty(top + T.base - 0.1), S, numFont);
+    top += T.grandH;
+    hLines.push(top);
+  }
+
+  /* table grid */
   const t = 0.5;
-  for (const y of hLines)
-    page.drawLine({ start: { x: X[0] - t / 2, y: ty(y) }, end: { x: X[9] + t / 2, y: ty(y) }, thickness: t, color: BLACK });
-  for (const x of X)
-    page.drawLine({ start: { x, y: ty(T.top - t / 2) }, end: { x, y: ty(top + t / 2) }, thickness: t, color: BLACK });
+  for (const y of hLines) {
+    page.drawLine({ start: { x: X[0] - t / 2, y: ty(y) },
+      end: { x: X[9] + t / 2, y: ty(y) }, thickness: t, color: BLACK });
+  }
+  for (const x of X) {
+    page.drawLine({ start: { x, y: ty(T.top - t / 2) },
+      end: { x, y: ty(top + t / 2) }, thickness: t, color: BLACK });
+  }
 
-  /* signature block: original position, pushed down only if the table is long */
-  const y0 = Math.max(T.sigTopOriginal, bottom + 22);
-  page.drawImage(ctx.signature, { x: 383.2, y: ty(y0 + 68.1), width: 142.7, height: 68.1 });
-  const ul = ty(y0 + 60.3 + 1.0);
-  page.drawLine({ start: { x: 71.3, y: ul }, end: { x: 165.9, y: ul }, thickness: 0.6, color: BLACK });
-  page.drawLine({ start: { x: 396.0, y: ul }, end: { x: 490.6, y: ul }, thickness: 0.6, color: BLACK });
-  draw(page, COMPANY.clientSignatureLabel, 72.0, ty(y0 + 74.4), CB, 9.48 * k);
-  draw(page, COMPANY.clientSignatureLocation, 71.3, ty(y0 + 88.1), C, 9.48 * k);
-  draw(page, COMPANY.companySignatureLabel, 396.0, ty(y0 + 74.4), CB, 9.48 * k);
-  draw(page, COMPANY.companySignatureSub, 396.0, ty(y0 + 88.1), C, 9.48 * k);
+  if (isFinal) {
+    const y0 = Math.max(T.sigTopOriginal, top + 22);
+    page.drawImage(ctx.signature, { x: 383.2, y: ty(y0 + 68.1), width: 142.7, height: 68.1 });
+    const ul = ty(y0 + 60.3 + 1.0);
+    page.drawLine({ start: { x: 71.3, y: ul }, end: { x: 165.9, y: ul }, thickness: 0.6, color: BLACK });
+    page.drawLine({ start: { x: 396.0, y: ul }, end: { x: 490.6, y: ul }, thickness: 0.6, color: BLACK });
+    draw(page, COMPANY.clientSignatureLabel, 72.0, ty(y0 + 74.4), CB, 9.48 * k);
+    draw(page, COMPANY.clientSignatureLocation, 71.3, ty(y0 + 88.1), C, 9.48 * k);
+    draw(page, COMPANY.companySignatureLabel, 396.0, ty(y0 + 74.4), CB, 9.48 * k);
+    draw(page, COMPANY.companySignatureSub, 396.0, ty(y0 + 88.1), C, 9.48 * k);
+  }
+}
+
+function drawPage2(doc: PDFDocument, ctx: Ctx, d: InvoiceData, totals: ReturnType<typeof computeTotals>) {
+  // Keep the original font size and move complete rows to another page when needed.
+  const rows = layoutRows(ctx, d, 1);
+  const bodyStart = T.top + T.headerH;
+  const finalRowsCapacity = PAGE_H - 24 - 22 - T.sigHeight - bodyStart -
+    T.totalH - T.vatH - T.grandH;
+  const continuationRowsCapacity = PAGE_H - 24 - bodyStart;
+  const rowHeight = (items: RowLayout[]) => items.reduce((sum, row) => sum + row.height, 0);
+
+  const pages: RowLayout[][] = [];
+  let remaining = [...rows];
+  while (rowHeight(remaining) > finalRowsCapacity) {
+    // Use as much of this page as possible, but leave a final-page-sized
+    // remainder for the totals and signature block.
+    const target = Math.min(continuationRowsCapacity, rowHeight(remaining) - finalRowsCapacity);
+    const chunk: RowLayout[] = [];
+    let used = 0;
+    while (remaining.length > 1 && used + remaining[0].height <= target) {
+      const next = remaining.shift()!;
+      chunk.push(next);
+      used += next.height;
+    }
+    if (chunk.length === 0) {
+      // A single unusually tall entry gets its own page rather than being
+      // compressed or allowed to overlap the totals/signature.
+      const next = remaining.shift()!;
+      if (next.height > continuationRowsCapacity) {
+        throw new PdfLayoutError("One invoice entry is too long to fit on a page. Shorten its text.");
+      }
+      chunk.push(next);
+    }
+    pages.push(chunk);
+  }
+  pages.push(remaining);
+
+  pages.forEach((pageRows, index) => {
+    const page = doc.addPage([PAGE_W, PAGE_H]);
+    drawTablePage(page, ctx, d, totals, pageRows, index === pages.length - 1, index > 0);
+  });
 }
 
 /* -------------------------------------------------------------------- entry */
@@ -432,7 +477,7 @@ export async function generateInvoicePdf(data: InvoiceData, assets: PdfAssets): 
   const totals = computeTotals(data.entries);
 
   drawPage1(doc.addPage([PAGE_W, PAGE_H]), ctx, data, totals);
-  drawPage2(doc.addPage([PAGE_W, PAGE_H]), ctx, data, totals);
+  drawPage2(doc, ctx, data, totals);
 
   doc.setTitle(`Invoice ${data.invoiceNumber.trim()}`);
   doc.setAuthor("Perfect Hand Integrated Services");
