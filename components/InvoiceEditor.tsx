@@ -16,7 +16,7 @@ import PdfPreview from "./PdfPreview";
 type Tab = "edit" | "preview";
 type Notice = { kind: "error" | "success"; text: string } | null;
 
-const EMPTY: InvoiceData = { invoiceNumber: "", invoiceDate: "", recipient: "", locations: "", clientOrganization: "FHI 360 Nigeria", entries: [] };
+const EMPTY: InvoiceData = { invoiceNumber: "", invoiceDate: "", recipient: "", locations: "", clientOrganization: "FHI 360 Nigeria", clientSignatureLocation: "PALLADIUM ABUJA.", entries: [] };
 const NO_SUGGESTIONS = { staffName: [], destination: [], driverName: [], duration: [] };
 
 export default function InvoiceEditor({ id }: { id: string }) {
@@ -49,7 +49,7 @@ export default function InvoiceEditor({ id }: { id: string }) {
     const rec = getInvoice(id);
     if (rec) {
       meta.current = { createdAt: rec.createdAt, status: rec.status };
-      setData({ ...rec.data, clientOrganization: rec.data.clientOrganization ?? "FHI 360 Nigeria" });
+      setData({ ...rec.data, clientOrganization: rec.data.clientOrganization ?? "FHI 360 Nigeria", clientSignatureLocation: rec.data.clientSignatureLocation ?? "PALLADIUM ABUJA." });
     } else {
       setData(newInvoiceData());
     }
@@ -240,6 +240,11 @@ export default function InvoiceEditor({ id }: { id: string }) {
                   <span className="field-label">Organization in letter body</span>
                   <input className="field-input" value={d.clientOrganization ?? "FHI 360 Nigeria"} autoComplete="off"
                     onChange={(e) => setField("clientOrganization", e.target.value)} placeholder="FHI 360 Nigeria" />
+                </label>
+                <label className="block">
+                  <span className="field-label">Organization/location under client signature</span>
+                  <input className="field-input" value={d.clientSignatureLocation ?? "PALLADIUM ABUJA."} autoComplete="off"
+                    onChange={(e) => setField("clientSignatureLocation", e.target.value)} placeholder="PALLADIUM ABUJA." />
                 </label>
                 <label className="block">
                   <span className="field-label">Locations</span>
