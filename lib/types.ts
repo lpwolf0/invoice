@@ -18,6 +18,8 @@ export interface InvoiceData {
   recipient: string;
   /** Inserted into: "...to various destination in {locations}." */
   locations: string;
+  /** Organization named in the payment-request letter body. */
+  clientOrganization?: string;
   entries: InvoiceEntry[];
 }
 
