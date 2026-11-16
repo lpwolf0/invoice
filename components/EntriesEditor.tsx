@@ -78,7 +78,7 @@ export default function EntriesEditor({ entries, onChange, onAdd, onRemove, onMo
                 </Field>
                 <Field label="Quantity" error={numberProblem(e.qty)}><input {...num(e, "qty")} placeholder="1" /></Field>
               </div>
-              <Field label="Staff name"><input {...text(e, "staffName", caps)} placeholder="Full name" /></Field>
+              <Field label="Staff name"><textarea value={e.staffName} onChange={(ev) => onChange(e.id, { staffName: ev.target.value })} rows={2} spellCheck={false} placeholder={"Enter each staff name on a new line"} className="field-input min-h-[72px] resize-y whitespace-pre-wrap text-slate-900 caret-slate-900 selection:bg-blue-200" /></Field>
               <Field label="Destination"><input {...text(e, "destination", caps)} placeholder="From … to …" /></Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Driver name"><input {...text(e, "driverName", caps)} /></Field>
@@ -123,7 +123,7 @@ export default function EntriesEditor({ entries, onChange, onAdd, onRemove, onMo
                 </td>
                 <td className="px-1"><input type="date" aria-label={`Entry ${i + 1} date`} value={e.date} onChange={(ev) => onChange(e.id, { date: ev.target.value })} className="field-input" /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} quantity`} {...num(e, "qty")} /></td>
-                <td className="px-1"><input aria-label={`Entry ${i + 1} staff name`} {...text(e, "staffName", caps)} /></td>
+                <td className="px-1"><textarea aria-label={`Entry ${i + 1} staff names (one per line)`} value={e.staffName} onChange={(ev) => onChange(e.id, { staffName: ev.target.value })} rows={2} spellCheck={false} placeholder="One name per line" className="field-input min-h-[64px] resize-y whitespace-pre-wrap text-slate-900 caret-slate-900 selection:bg-blue-200" /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} destination`} {...text(e, "destination", caps)} /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} driver name`} {...text(e, "driverName", caps)} /></td>
                 <td className="px-1"><input aria-label={`Entry ${i + 1} duration`} {...text(e, "duration")} /></td>
